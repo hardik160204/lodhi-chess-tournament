@@ -14,7 +14,7 @@ export default function RegistrationForm() {
   const [confirmedRecord, setConfirmedRecord] = useState<Registration | null>(null);
 
   const upiId = "9310058789@ptsbi"; 
-  const payeeName = "Tournament Director"; 
+  const payeeName = "Saarang Dev"; 
   const amount = "99.00";
   const note = `LodhiChess-${formData.name.trim().replace(/\s+/g, "") || "Pass"}`;
   const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
@@ -95,12 +95,12 @@ export default function RegistrationForm() {
         <form onSubmit={handleProceedToPay} className="space-y-5">
           <div>
             <label className="block text-xs font-bold uppercase text-slate-500 mb-1.5">Full Name *</label>
-            <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500 text-slate-900 transition-all" />
+            <input type="text" required placeholder="e.g. Rahul Sharma" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500 text-slate-900 placeholder-slate-400 transition-all" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase text-slate-500 mb-1.5">WhatsApp *</label>
-              <input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500 text-slate-900 transition-all" />
+              <input type="tel" required placeholder="e.g. 9876543210" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500 text-slate-900 placeholder-slate-400 transition-all" />
             </div>
             <div>
               <label className="block text-xs font-bold uppercase text-slate-500 mb-1.5">Category Age</label>
@@ -113,7 +113,7 @@ export default function RegistrationForm() {
           </div>
           <div>
             <label className="block text-xs font-bold uppercase text-slate-500 mb-1.5">Email Address *</label>
-            <input type="email" required placeholder="To receive the entry pass" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500 text-slate-900 transition-all" />
+            <input type="email" required placeholder="e.g. rahul@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-forest-500 text-slate-900 placeholder-slate-400 transition-all" />
           </div>
 
           <button type="submit" className="w-full mt-4 py-3.5 px-4 bg-forest-600 hover:bg-forest-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-forest-600/30">
@@ -134,9 +134,16 @@ export default function RegistrationForm() {
           </div>
 
           <div className="block sm:hidden">
-            <a href={upiUrl} className="w-full py-3.5 px-4 bg-[#1b4d3e] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-forest-900/20 active:scale-[0.98] transition-transform">
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = upiUrl;
+              }}
+              className="w-full py-3.5 px-4 bg-[#1b4d3e] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-forest-900/20 active:scale-[0.98] transition-transform"
+            >
               <Smartphone className="w-4 h-4" /> Tap to Pay via UPI App
-            </a>
+            </button>
           </div>
 
           <div className="hidden sm:flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-200">
