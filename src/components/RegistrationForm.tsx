@@ -13,7 +13,7 @@ export default function RegistrationForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [confirmedRecord, setConfirmedRecord] = useState<Registration | null>(null);
 
-  const upiId = "yourname@bank"; 
+  const upiId = "9310058789@ptsbi"; 
   const payeeName = "Tournament Director"; 
   const amount = "99.00";
   const note = `LodhiChess-${formData.name.trim().replace(/\s+/g, "") || "Pass"}`;
