@@ -72,21 +72,21 @@ export default function Home() {
                     <span className="font-bold flex items-center gap-2 text-slate-800"><div className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs">1</div> 1st Place</span>
                     <span className="font-black text-forest-800 text-lg">₹1200</span>
                   </div>
-                  <span className="text-[10px] font-bold text-orange-600 uppercase pl-7">+ Winner Trophy & Gold Medal</span>
+                  <span className="text-[10px] font-bold text-orange-600 uppercase pl-7">Gold Medal</span>
                 </li>
                 <li className="flex flex-col bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-bold flex items-center gap-2 text-slate-700"><div className="w-5 h-5 rounded-full bg-slate-400 text-white flex items-center justify-center text-xs">2</div> 2nd Place</span>
                     <span className="font-black text-forest-800 text-base">₹800</span>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase pl-7">+ Runner-up Trophy & Silver Medal</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase pl-7">Silver Medal</span>
                 </li>
                 <li className="flex flex-col bg-orange-50/50 p-2.5 rounded-lg border border-orange-200/50">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-bold flex items-center gap-2 text-slate-700"><div className="w-5 h-5 rounded-full bg-orange-400 text-white flex items-center justify-center text-xs">3</div> 3rd Place</span>
                     <span className="font-black text-forest-800 text-base">₹600</span>
                   </div>
-                  <span className="text-[10px] font-bold text-orange-600 uppercase pl-7">+ 2nd Runner-up & Bronze Medal</span>
+                  <span className="text-[10px] font-bold text-orange-600 uppercase pl-7">Bronze Medal</span>
                 </li>
                 <li className="flex flex-col bg-white p-2.5 rounded-lg border border-slate-100">
                   <div className="flex justify-between items-center mb-1">
