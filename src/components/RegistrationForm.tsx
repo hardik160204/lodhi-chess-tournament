@@ -283,6 +283,49 @@ export default function RegistrationForm() {
           <button type="button" onClick={triggerDemoConfirmation} className="cursor-pointer text-xs text-slate-400 hover:text-orange-500 underline mt-8 transition-colors">(Dev test: Force Confirm)</button>
         </div>
       )}
+
+      {/* Support & Payment Guide Footer */}
+      <div className="mt-8 pt-6 border-t border-slate-100">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 sm:p-6">
+          <h4 className="font-black text-slate-800 text-sm uppercase tracking-wide mb-4">
+            Payment Guide & Support
+          </h4>
+          
+          <div className="space-y-4 text-sm text-slate-600">
+            <div className="flex gap-3">
+              <span className="text-orange-500 font-bold shrink-0">1.</span>
+              <p><strong>Payment Deducted but not verified?</strong> Do not panic. Bank servers can occasionally take 5–10 minutes to deliver the SMS confirmation. Leave this window open.</p>
+            </div>
+            
+            <div className="flex gap-3">
+              <span className="text-orange-500 font-bold shrink-0">2.</span>
+              <p><strong>Missing Email?</strong> Check your <strong>Spam</strong> or <strong>Promotions</strong> folder. Mark <span className="font-semibold text-slate-800">lodhigardenchesstournament@gmail.com</span> as "Not Spam" to receive future round pairings.</p>
+            </div>
+
+            <div className="flex gap-3">
+              <span className="text-orange-500 font-bold shrink-0">3.</span>
+              <p><strong>Manual Verification:</strong> If your screen is stuck for more than 10 minutes, send a screenshot of your successful transaction to our support team below. We will manually generate your entry pass.</p>
+            </div>
+          </div>
+
+          {/* Contact Details */}
+          <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+            <div className="flex-1">
+              <p className="text-xs font-bold text-slate-400 uppercase mb-1">Official Support</p>
+              <a href="mailto:lodhigardenchesstournament@gmail.com" className="text-forest-700 font-bold hover:underline break-all">
+                lodhigardenchesstournament@gmail.com
+              </a>
+            </div>
+            <div className="w-full sm:w-px sm:h-10 bg-slate-200"></div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-slate-400 uppercase mb-1">WhatsApp / Call</p>
+              <a href="tel:+910000000000" className="text-forest-700 font-bold hover:underline">
+                +91 00000 00000
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

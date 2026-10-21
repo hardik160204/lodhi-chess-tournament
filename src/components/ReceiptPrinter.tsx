@@ -102,7 +102,7 @@ export default function ReceiptPrinter({ registration, onReset }: ReceiptProps) 
                 <div><span className="text-zinc-400">PHONE: </span><span className="text-zinc-700">{registration.phone}</span></div>
                 <div><span className="text-zinc-400">UTR REF: </span><span className="font-bold text-zinc-800 break-all">{registration.utr}</span></div>
                 {registration.fide_id && (
-                  <div><span className="text-zinc-400">CHESS ID: </span><span className="text-zinc-700">{registration.fide_id}</span></div>
+                  <div><span className="text-zinc-400">CATEGORY: </span><span className="text-zinc-700">{registration.fide_id}</span></div>
                 )}
               </div>
 
@@ -156,13 +156,6 @@ export default function ReceiptPrinter({ registration, onReset }: ReceiptProps) 
         <button onClick={handlePrint} className="flex-1 flex justify-center items-center gap-1.5 px-3 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 rounded-lg text-xs font-medium transition">
           <Printer className="w-3.5 h-3.5" />
           <span>Print / PDF</span>
-        </button>
-        <button onClick={handleCopy} className="flex-1 flex justify-center items-center gap-1.5 px-3 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 rounded-lg text-xs font-medium transition">
-          {copied ? (
-            <><Check className="w-3.5 h-3.5 text-emerald-400" /><span className="text-emerald-400">Copied</span></>
-          ) : (
-            <><Copy className="w-3.5 h-3.5" /><span>Copy Pass</span></>
-          )}
         </button>
         {onReset && (
           <button onClick={onReset} className="w-full flex justify-center items-center gap-1.5 px-3 py-2.5 mt-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700/80 rounded-lg text-xs font-medium transition">
