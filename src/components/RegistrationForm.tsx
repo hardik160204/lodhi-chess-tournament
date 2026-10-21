@@ -15,6 +15,9 @@ export default function RegistrationForm() {
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [spotsRemaining, setSpotsRemaining] = useState<number | null>(null);
 
+  // 🔴 CHANGE THIS NUMBER TO 10 FOR TESTING, OR LEAVE AT 55
+  const PLAYER_LIMIT = 55;
+
   const upiId = "9310058789@ptsbi"; 
   const payeeName = "Saarang Dev"; 
   const amount = "149.00";
@@ -24,11 +27,14 @@ export default function RegistrationForm() {
   // Fetch current registration count on load
   useEffect(() => {
     const fetchCount = async () => {
-      const { count } = await supabase.from('registrations').select('*', { count: 'exact', head: true });
-      if (count !== null) setSpotsRemaining(Math.max(0, 45 - count));
+      const { count } = await supabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'CONFIRMED');
+      if (count !== null) setSpotsRemaining(Math.max(0, PLAYER_LIMIT - count));
     };
     fetchCount();
-  }, []);
+  }, [PLAYER_LIMIT]);
 
   const handleProceedToPay = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,11 +45,14 @@ export default function RegistrationForm() {
     
     // Check Hard Cap before letting them pay
     setLoading(true);
-    const { count } = await supabase.from('registrations').select('*', { count: 'exact', head: true });
+    const { count } = await supabase
+      .from('registrations')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'CONFIRMED');
     setLoading(false);
     
-    if (count !== null && count >= 45) {
-      setErrorMsg("Registration is strictly closed. We have reached our maximum capacity of 45 players.");
+    if (count !== null && count >= PLAYER_LIMIT) {
+      setErrorMsg(`Registration is strictly closed. We have reached our maximum capacity of ${PLAYER_LIMIT} players.`);
       return;
     }
 
@@ -93,8 +102,12 @@ export default function RegistrationForm() {
 
     try {
       // Final Cap Check on Insertion
-      const { count } = await supabase.from('registrations').select('*', { count: 'exact', head: true });
-      if (count !== null && count >= 45) throw new Error("Registration is completely full (45/45).");
+      const { count } = await supabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'CONFIRMED');
+        
+      if (count !== null && count >= PLAYER_LIMIT) throw new Error(`Registration is completely full (${PLAYER_LIMIT}/${PLAYER_LIMIT}).`);
 
       const { data, error } = await supabase.from("registrations").insert([{
         name: formData.name, phone: formData.phone, email: formData.email,
@@ -167,7 +180,7 @@ export default function RegistrationForm() {
           )}
           {spotsRemaining === 0 && (
             <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-black shadow-sm text-center tracking-wide">
-              🚫 REGISTRATION CLOSED (45/45 FILLED)
+              🚫 REGISTRATION CLOSED ({PLAYER_LIMIT}/{PLAYER_LIMIT} FILLED)
             </div>
           )}
 
@@ -192,7 +205,6 @@ export default function RegistrationForm() {
             <input type="email" required placeholder="e.g. rahul@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-slate-900 placeholder-slate-400 transition-all cursor-text" />
           </div>
 
-          {/* High-Conversion CTA Button */}
           <button 
             type="submit" 
             disabled={loading || spotsRemaining === 0} 
