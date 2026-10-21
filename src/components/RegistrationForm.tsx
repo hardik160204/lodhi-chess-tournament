@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { supabase, Registration } from "@/lib/supabase";
 import ReceiptPrinter from "./ReceiptPrinter";
-import { QrCode, ShieldCheck, Loader2, ArrowRight, Copy, Check, Download } from "lucide-react";
+import { QrCode, ShieldCheck, Loader2, ArrowRight, Copy, Check, Download, AlertCircle } from "lucide-react";
 
 export default function RegistrationForm() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -14,6 +14,9 @@ export default function RegistrationForm() {
   const [confirmedRecord, setConfirmedRecord] = useState<Registration | null>(null);
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [spotsRemaining, setSpotsRemaining] = useState<number | null>(null);
+  
+  // New state to handle delayed payments / manual verification message
+  const [verificationTimeout, setVerificationTimeout] = useState(false);
 
   // 🔴 CHANGE THIS NUMBER TO 10 FOR TESTING, OR LEAVE AT 55
   const PLAYER_LIMIT = 55;
@@ -43,7 +46,6 @@ export default function RegistrationForm() {
       return;
     }
     
-    // Check Hard Cap before letting them pay
     setLoading(true);
     const { count } = await supabase
       .from('registrations')
@@ -66,7 +68,6 @@ export default function RegistrationForm() {
     setTimeout(() => setCopiedUpi(false), 2000);
   };
 
-  // Convert SVG to PNG and download
   const handleDownloadQR = () => {
     const svg = document.getElementById("upi-qr-code");
     if (!svg) return;
@@ -99,9 +100,26 @@ export default function RegistrationForm() {
     }
     setLoading(true);
     setErrorMsg("");
+    setVerificationTimeout(false); // Reset timeout on new submission
 
     try {
-      // Final Cap Check on Insertion
+      const cleanUtr = formData.utr.trim();
+
+      // 1. SMART PRE-CHECK: Did Make.com already confirm this UTR before they hit submit?
+      const { data: existingRecord } = await supabase
+        .from("registrations")
+        .select("*")
+        .eq("utr", cleanUtr)
+        .maybeSingle();
+
+      if (existingRecord && existingRecord.status === "CONFIRMED") {
+        setConfirmedRecord(existingRecord);
+        setStep(4);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Cap Check
       const { count } = await supabase
         .from('registrations')
         .select('*', { count: 'exact', head: true })
@@ -109,12 +127,14 @@ export default function RegistrationForm() {
         
       if (count !== null && count >= PLAYER_LIMIT) throw new Error(`Registration is completely full (${PLAYER_LIMIT}/${PLAYER_LIMIT}).`);
 
+      // 3. Insert new pending row
       const { data, error } = await supabase.from("registrations").insert([{
         name: formData.name, phone: formData.phone, email: formData.email,
-        fide_id: formData.category, amount: 149.0, utr: formData.utr.trim(), status: "PENDING",
+        fide_id: formData.category, amount: 149.0, utr: cleanUtr, status: "PENDING",
       }]).select().single();
 
       if (error) throw error;
+      
       setStep(3);
       listenForVerification(data.id);
     } catch (err: any) {
@@ -125,6 +145,7 @@ export default function RegistrationForm() {
   };
 
   const listenForVerification = (registrationId: string) => {
+    // 1. Instant Realtime Listener
     const channel = supabase.channel(`reg-${registrationId}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "registrations", filter: `id=eq.${registrationId}` },
         (payload) => {
@@ -132,10 +153,37 @@ export default function RegistrationForm() {
           if (updated.status === "CONFIRMED") {
             setConfirmedRecord(updated);
             setStep(4);
-            supabase.removeChannel(channel);
+            cleanupListeners();
           }
         }
       ).subscribe();
+
+    // 2. Fast Polling Loop (Checks every 3 seconds)
+    const pollInterval = setInterval(async () => {
+      const { data } = await supabase
+        .from("registrations")
+        .select("*")
+        .eq("id", registrationId)
+        .single();
+
+      if (data && data.status === "CONFIRMED") {
+        setConfirmedRecord(data);
+        setStep(4);
+        cleanupListeners();
+      }
+    }, 3000);
+
+    // 3. Safety Net Timeout (Triggers reassuring message after 20 seconds)
+    const timeoutTimer = setTimeout(() => {
+      setVerificationTimeout(true);
+      // We keep polling in the background just in case it succeeds late!
+    }, 20000);
+
+    const cleanupListeners = () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+      clearTimeout(timeoutTimer);
+    };
   };
 
   const triggerDemoConfirmation = () => {
@@ -277,9 +325,24 @@ export default function RegistrationForm() {
 
       {step === 3 && (
         <div className="py-12 flex flex-col items-center text-center relative z-10">
-          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
-          <h3 className="font-bold text-lg text-slate-800">Verifying Payment...</h3>
-          <p className="text-sm text-slate-500 mt-2 max-w-[250px]">Matching your UTR ({formData.utr}) with our bank system. Keep this window open.</p>
+          {!verificationTimeout ? (
+            <>
+              <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
+              <h3 className="font-bold text-lg text-slate-800">Verifying Payment...</h3>
+              <p className="text-sm text-slate-500 mt-2 max-w-[250px]">Matching your UTR ({formData.utr}) with our bank system. Keep this window open.</p>
+            </>
+          ) : (
+            <div className="bg-orange-50 border border-orange-200 p-6 rounded-2xl w-full">
+              <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+              <h3 className="font-bold text-lg text-slate-800 mb-2">Manual Verification</h3>
+              <p className="text-sm text-slate-700 leading-relaxed mb-4">
+                Don't worry, <strong>your payment is completely safe with us!</strong>
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed bg-white/50 p-4 rounded-xl border border-orange-100">
+                Please WhatsApp your payment screenshot to <strong>+91 9310058789</strong> or email <strong>lodhigardenchesstournament@gmail.com</strong>. We will review it and generate your pass immediately.
+              </p>
+            </div>
+          )}
           <button type="button" onClick={triggerDemoConfirmation} className="cursor-pointer text-xs text-slate-400 hover:text-orange-500 underline mt-8 transition-colors">(Dev test: Force Confirm)</button>
         </div>
       )}
@@ -294,7 +357,7 @@ export default function RegistrationForm() {
           <div className="space-y-4 text-sm text-slate-600">
             <div className="flex gap-3">
               <span className="text-orange-500 font-bold shrink-0">1.</span>
-              <p><strong>Payment Deducted but not verified?</strong> Do not panic. Bank servers can occasionally take 5–10 minutes to deliver the SMS confirmation. Leave this window open.</p>
+              <p><strong>Payment Deducted but not verified?</strong> Do not panic. Bank servers can occasionally take a few minutes to deliver the SMS confirmation. Leave this window open.</p>
             </div>
             
             <div className="flex gap-3">
@@ -304,7 +367,7 @@ export default function RegistrationForm() {
 
             <div className="flex gap-3">
               <span className="text-orange-500 font-bold shrink-0">3.</span>
-              <p><strong>Manual Verification:</strong> If your screen is stuck for more than 10 minutes, send a screenshot of your successful transaction to our support team below. We will manually generate your entry pass.</p>
+              <p><strong>Manual Verification:</strong> If your screen is stuck, send a screenshot of your successful transaction to our support team below. We will manually generate your entry pass.</p>
             </div>
           </div>
 
