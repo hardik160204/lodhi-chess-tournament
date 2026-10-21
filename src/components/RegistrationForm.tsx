@@ -15,7 +15,6 @@ export default function RegistrationForm() {
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [spotsRemaining, setSpotsRemaining] = useState<number | null>(null);
   
-  // New state to handle delayed payments / manual verification message
   const [verificationTimeout, setVerificationTimeout] = useState(false);
 
   // 🔴 CHANGE THIS NUMBER TO 10 FOR TESTING, OR LEAVE AT 55
@@ -27,7 +26,6 @@ export default function RegistrationForm() {
   const note = "Lodhi Chess Open Entry";
   const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
 
-  // Fetch current registration count on load
   useEffect(() => {
     const fetchCount = async () => {
       const { count } = await supabase
@@ -100,12 +98,12 @@ export default function RegistrationForm() {
     }
     setLoading(true);
     setErrorMsg("");
-    setVerificationTimeout(false); // Reset timeout on new submission
+    setVerificationTimeout(false);
 
     try {
       const cleanUtr = formData.utr.trim();
 
-      // 1. SMART PRE-CHECK: Did Make.com already confirm this UTR before they hit submit?
+      // 1. SMART PRE-CHECK: Did Make.com already create this UTR before they hit submit?
       const { data: existingRecord } = await supabase
         .from("registrations")
         .select("*")
@@ -113,10 +111,25 @@ export default function RegistrationForm() {
         .maybeSingle();
 
       if (existingRecord && existingRecord.status === "CONFIRMED") {
-        setConfirmedRecord(existingRecord);
+        // Make.com already validated the SMS! Just attach the user's name to it.
+        const { data: updatedRecord, error: updateError } = await supabase
+          .from("registrations")
+          .update({
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email,
+            fide_id: formData.category
+          })
+          .eq("utr", cleanUtr)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+
+        setConfirmedRecord(updatedRecord);
         setStep(4);
         setLoading(false);
-        return;
+        return; // Stop here, no waiting needed!
       }
 
       // 2. Cap Check
@@ -127,11 +140,11 @@ export default function RegistrationForm() {
         
       if (count !== null && count >= PLAYER_LIMIT) throw new Error(`Registration is completely full (${PLAYER_LIMIT}/${PLAYER_LIMIT}).`);
 
-      // 3. Insert new pending row
-      const { data, error } = await supabase.from("registrations").insert([{
+      // 3. Insert new pending row using UPSERT to prevent race conditions
+      const { data, error } = await supabase.from("registrations").upsert([{
         name: formData.name, phone: formData.phone, email: formData.email,
         fide_id: formData.category, amount: 149.0, utr: cleanUtr, status: "PENDING",
-      }]).select().single();
+      }], { onConflict: 'utr' }).select().single();
 
       if (error) throw error;
       
@@ -158,8 +171,12 @@ export default function RegistrationForm() {
         }
       ).subscribe();
 
-    // 2. Fast Polling Loop (Checks every 3 seconds)
+    // 2. FREE LONG POLLING (10 Minutes total: 120 checks * 5 seconds)
+    let attempts = 0;
+    const maxAttempts = 120; 
+
     const pollInterval = setInterval(async () => {
+      attempts++;
       const { data } = await supabase
         .from("registrations")
         .select("*")
@@ -171,13 +188,18 @@ export default function RegistrationForm() {
         setStep(4);
         cleanupListeners();
       }
-    }, 3000);
 
-    // 3. Safety Net Timeout (Triggers reassuring message after 20 seconds)
+      // If it fully times out after 10 minutes, kill the loop
+      if (attempts >= maxAttempts) {
+        setVerificationTimeout(true);
+        cleanupListeners();
+      }
+    }, 5000);
+
+    // 3. UI Reassurance Timeout (Shows warning screen after 30 sec, but continues checking in background!)
     const timeoutTimer = setTimeout(() => {
       setVerificationTimeout(true);
-      // We keep polling in the background just in case it succeeds late!
-    }, 20000);
+    }, 30000);
 
     const cleanupListeners = () => {
       supabase.removeChannel(channel);
@@ -188,7 +210,7 @@ export default function RegistrationForm() {
 
   const triggerDemoConfirmation = () => {
     setConfirmedRecord({
-      name: formData.name || "Test Player", phone: formData.phone || "9999999999", email: formData.email || "test@test.com", amount: 149.0, utr: formData.utr || "123456789012", status: "CONFIRMED", id: "EVT-8921"
+      name: formData.name || "Test Player", phone: formData.phone || "9999999999", email: formData.email || "test@test.com", amount: 149.0, utr: formData.utr || "123456789012", status: "CONFIRMED", id: "EVT-8921", created_at: new Date().toISOString()
     });
     setStep(4);
   };
