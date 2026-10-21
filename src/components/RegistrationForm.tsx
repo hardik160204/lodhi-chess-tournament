@@ -319,8 +319,8 @@ export default function RegistrationForm() {
             <div className="w-full sm:w-px sm:h-10 bg-slate-200"></div>
             <div className="flex-1">
               <p className="text-xs font-bold text-slate-400 uppercase mb-1">WhatsApp / Call</p>
-              <a href="tel:+910000000000" className="text-forest-700 font-bold hover:underline">
-                +91 00000 00000
+              <a href="tel:+919310058789" className="text-forest-700 font-bold hover:underline">
+                +91 9310058789
               </a>
             </div>
           </div>
