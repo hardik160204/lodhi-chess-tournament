@@ -18,7 +18,7 @@ export default function RegistrationForm() {
   const [verificationTimeout, setVerificationTimeout] = useState(false);
 
   // 🔴 CHANGE THIS NUMBER TO 10 FOR TESTING, OR LEAVE AT 55
-  const PLAYER_LIMIT = 55;
+  const PLAYER_LIMIT = 45;
 
   const upiId = "9310058789@ptsbi"; 
   const payeeName = "Saarang Dev"; 
@@ -206,13 +206,6 @@ export default function RegistrationForm() {
       clearInterval(pollInterval);
       clearTimeout(timeoutTimer);
     };
-  };
-
-  const triggerDemoConfirmation = () => {
-    setConfirmedRecord({
-      name: formData.name || "Test Player", phone: formData.phone || "9999999999", email: formData.email || "test@test.com", amount: 149.0, utr: formData.utr || "123456789012", status: "CONFIRMED", id: "EVT-8921", created_at: new Date().toISOString()
-    });
-    setStep(4);
   };
 
   if (step === 4 && confirmedRecord) {
